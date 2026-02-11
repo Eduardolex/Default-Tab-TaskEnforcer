@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tab</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+
+  <!-- Daily review banner — hidden by default, shown via JS -->
+  <div id="review-banner" class="review-banner hidden">
+    <span>Review today's tasks before you go.</span>
+    <button id="mark-reviewed-btn">Mark reviewed</button>
+  </div>
+
+  <main class="container">
+    <h1 class="title">Tasks</h1>
+
+    <!-- Add task input -->
+    <div class="input-row">
+      <input
+        id="task-input"
+        type="text"
+        placeholder="Add a task and press Enter..."
+        autocomplete="off"
+        autofocus
+      />
+    </div>
+
+    <!-- Task list -->
+    <ul id="task-list" class="task-list"></ul>
+
+    <!-- Footer: remaining count, clear completed, badge toggle -->
+    <div class="footer">
+      <span id="remaining-count" class="remaining-count">0 remaining</span>
+      <div class="footer-actions">
+        <label class="badge-toggle" title="Show remaining count on extension icon">
+          <input id="badge-toggle" type="checkbox" />
+          Badge
+        </label>
+        <button id="clear-completed-btn" class="clear-btn">Clear completed</button>
+      </div>
+    </div>
+
+    <p class="hint">Enter = add &middot; Esc = clear input &middot; Ctrl+Backspace = delete last task</p>
+  </main>
+
+  <script src="newtab.js"></script>
+</body>
+</html>

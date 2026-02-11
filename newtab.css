@@ -1,0 +1,256 @@
+/* ===== Reset & base ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #0f0f0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ===== Daily review banner ===== */
+.review-banner {
+  width: 100%;
+  background: #1a3a2a;
+  border-bottom: 1px solid #2a5a3a;
+  color: #8fd4a4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 20px;
+  font-size: 14px;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.review-banner.hidden {
+  opacity: 0;
+  max-height: 0;
+  padding: 0 20px;
+  border: none;
+  pointer-events: none;
+}
+
+.review-banner button {
+  background: #2a5a3a;
+  color: #c4f0d0;
+  border: 1px solid #3a7a4a;
+  border-radius: 4px;
+  padding: 4px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.review-banner button:hover {
+  background: #3a7a4a;
+}
+
+/* ===== Main container ===== */
+.container {
+  width: 100%;
+  max-width: 560px;
+  padding: 60px 20px 40px;
+  flex: 1;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+/* ===== Input row ===== */
+.input-row {
+  margin-bottom: 20px;
+}
+
+#task-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #e0e0e0;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#task-input:focus {
+  border-color: #555;
+}
+
+#task-input::placeholder {
+  color: #666;
+}
+
+/* ===== Task list ===== */
+.task-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #161616;
+  border-radius: 6px;
+  transition: background 0.1s, opacity 0.2s;
+}
+
+.task-item:hover {
+  background: #1c1c1c;
+}
+
+.task-item.done {
+  opacity: 0.45;
+}
+
+.task-item.done .task-text {
+  text-decoration: line-through;
+}
+
+/* Checkbox */
+.task-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.task-item input[type="checkbox"]:checked {
+  background: #3a7a4a;
+  border-color: #3a7a4a;
+}
+
+.task-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.task-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Delete button */
+.delete-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s;
+}
+
+.task-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  color: #e55;
+}
+
+/* ===== Footer ===== */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 10px 4px;
+  border-top: 1px solid #222;
+  font-size: 13px;
+  color: #777;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clear-btn {
+  background: none;
+  border: 1px solid #333;
+  color: #888;
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.clear-btn:hover {
+  color: #ccc;
+  border-color: #555;
+}
+
+/* Badge toggle */
+.badge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  user-select: none;
+}
+
+.badge-toggle input[type="checkbox"] {
+  accent-color: #3a7a4a;
+  cursor: pointer;
+}
+
+/* ===== Hint ===== */
+.hint {
+  text-align: center;
+  font-size: 11px;
+  color: #444;
+  margin-top: 24px;
+}
+
+/* ===== Empty state ===== */
+.task-list:empty::after {
+  content: "No tasks yet. Type above to add one.";
+  display: block;
+  text-align: center;
+  padding: 40px 0;
+  color: #444;
+  font-size: 14px;
+}
