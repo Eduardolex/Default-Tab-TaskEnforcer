@@ -15,7 +15,49 @@
   </div>
 
   <main class="container">
-    <h1 class="title">Tasks</h1>
+    <div class="title-row">
+      <h1 class="title">Tasks</h1>
+      <button id="calendar-toggle" class="calendar-toggle-btn" title="Toggle calendar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="4" width="16" height="14" rx="2"/>
+          <line x1="2" y1="8" x2="18" y2="8"/>
+          <line x1="6" y1="2" x2="6" y2="6"/>
+          <line x1="14" y1="2" x2="14" y2="6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Calendar panel (hidden by default) -->
+    <div id="calendar-panel" class="calendar-panel hidden">
+      <div class="streak-display">
+        <span id="streak-current" class="streak-current"></span>
+        <span id="streak-best" class="streak-best"></span>
+      </div>
+      <div class="calendar-nav">
+        <button id="cal-prev" class="cal-nav-btn">&lt;</button>
+        <span id="cal-month-label" class="cal-month-label"></span>
+        <button id="cal-next" class="cal-nav-btn">&gt;</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="cal-day-header">Su</div>
+        <div class="cal-day-header">Mo</div>
+        <div class="cal-day-header">Tu</div>
+        <div class="cal-day-header">We</div>
+        <div class="cal-day-header">Th</div>
+        <div class="cal-day-header">Fr</div>
+        <div class="cal-day-header">Sa</div>
+        <div id="cal-days" class="cal-days-container"></div>
+      </div>
+    </div>
+
+    <!-- Day detail popup -->
+    <div id="day-detail-popup" class="day-detail-popup hidden">
+      <div class="day-detail-header">
+        <span id="day-detail-date"></span>
+        <button id="day-detail-close" class="day-detail-close">&times;</button>
+      </div>
+      <ul id="day-detail-tasks" class="day-detail-tasks"></ul>
+    </div>
 
     <!-- Add task input -->
     <div class="input-row">
@@ -45,6 +87,9 @@
 
     <p class="hint">Enter = add &middot; Esc = clear input &middot; Ctrl+Backspace = delete last task</p>
   </main>
+
+  <!-- Day detail overlay backdrop -->
+  <div id="day-detail-overlay" class="day-detail-overlay hidden"></div>
 
   <script src="newtab.js"></script>
 </body>

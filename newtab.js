@@ -41,6 +41,7 @@ async function saveTasks(tasks) {
   await storageSet({ tasks });
   render(tasks);
   updateBadge(tasks);
+  await snapshotToday(tasks);
 }
 
 /** Create a new task object. */
@@ -152,6 +153,217 @@ async function updateBadge(tasks) {
   }
 }
 
+// ---- Calendar & Streak ----
+
+const calendarToggle = $("#calendar-toggle");
+const calendarPanel = $("#calendar-panel");
+const calDays = $("#cal-days");
+const calMonthLabel = $("#cal-month-label");
+const calPrev = $("#cal-prev");
+const calNext = $("#cal-next");
+const streakCurrent = $("#streak-current");
+const streakBest = $("#streak-best");
+const dayDetailPopup = $("#day-detail-popup");
+const dayDetailOverlay = $("#day-detail-overlay");
+const dayDetailDate = $("#day-detail-date");
+const dayDetailTasks = $("#day-detail-tasks");
+const dayDetailClose = $("#day-detail-close");
+
+let calYear, calMonth; // currently displayed month
+let dailyHistory = {};
+
+/** Snapshot today's task state into dailyHistory. */
+async function snapshotToday(tasks) {
+  dailyHistory = (await storageGet("dailyHistory")) || {};
+  const today = todayString();
+  const simplified = tasks.map((t) => ({ text: t.text, done: t.done }));
+  const allDone = tasks.length > 0 && tasks.every((t) => t.done);
+  dailyHistory[today] = { tasks: simplified, allDone };
+  await storageSet({ dailyHistory });
+  updateStreak();
+  if (!calendarPanel.classList.contains("hidden")) {
+    renderCalendar(calYear, calMonth);
+  }
+}
+
+/** Load dailyHistory from storage. */
+async function loadHistory() {
+  dailyHistory = (await storageGet("dailyHistory")) || {};
+}
+
+/** Calculate streak from dailyHistory walking backwards. */
+function calculateStreak() {
+  const dates = Object.keys(dailyHistory).sort();
+  if (dates.length === 0) return { current: 0, best: 0 };
+
+  // Walk backwards from today
+  let current = 0;
+  const d = new Date();
+  // Check today first
+  const todayKey = todayString();
+  if (dailyHistory[todayKey] && dailyHistory[todayKey].allDone) {
+    current = 1;
+    d.setDate(d.getDate() - 1);
+  } else {
+    // Maybe the streak ended yesterday
+    d.setDate(d.getDate() - 1);
+  }
+
+  while (true) {
+    const key = formatDate(d);
+    if (dailyHistory[key] && dailyHistory[key].allDone) {
+      current++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  // Calculate best streak ever
+  let best = 0;
+  let run = 0;
+  const allDates = dates.slice().sort();
+  for (let i = 0; i < allDates.length; i++) {
+    if (dailyHistory[allDates[i]].allDone) {
+      // Check if consecutive from previous
+      if (i === 0) {
+        run = 1;
+      } else {
+        const prev = new Date(allDates[i - 1] + "T00:00:00");
+        const curr = new Date(allDates[i] + "T00:00:00");
+        const diff = (curr - prev) / (1000 * 60 * 60 * 24);
+        if (diff === 1 && dailyHistory[allDates[i - 1]].allDone) {
+          run++;
+        } else {
+          run = 1;
+        }
+      }
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+
+  return { current, best: Math.max(best, current) };
+}
+
+/** Format a Date object as YYYY-MM-DD. */
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Update the streak display. */
+function updateStreak() {
+  const { current, best } = calculateStreak();
+  streakCurrent.textContent = current > 0 ? `\u{1F525} ${current} day streak` : "No streak yet";
+  streakBest.textContent = best > 0 ? `Best: ${best}` : "";
+}
+
+/** Render the calendar grid for a given year/month. */
+function renderCalendar(year, month) {
+  calYear = year;
+  calMonth = month;
+
+  const monthNames = ["January","February","March","April","May","June",
+    "July","August","September","October","November","December"];
+  calMonthLabel.textContent = `${monthNames[month]} ${year}`;
+
+  calDays.innerHTML = "";
+
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayKey = todayString();
+
+  // Empty cells for days before the 1st
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement("div");
+    empty.className = "cal-day empty";
+    calDays.appendChild(empty);
+  }
+
+  // Day cells
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const cell = document.createElement("div");
+    cell.className = "cal-day";
+    cell.textContent = day;
+
+    if (dateStr === todayKey) cell.classList.add("today");
+
+    const entry = dailyHistory[dateStr];
+    if (entry) {
+      cell.classList.add("has-data");
+      cell.classList.add(entry.allDone ? "all-done" : "not-all-done");
+      cell.addEventListener("click", () => showDayDetail(dateStr));
+    }
+
+    calDays.appendChild(cell);
+  }
+}
+
+/** Show the day detail popup for a given date. */
+function showDayDetail(dateStr) {
+  const entry = dailyHistory[dateStr];
+  if (!entry) return;
+
+  // Format date nicely
+  const d = new Date(dateStr + "T00:00:00");
+  const opts = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+  dayDetailDate.textContent = d.toLocaleDateString(undefined, opts);
+
+  dayDetailTasks.innerHTML = "";
+  entry.tasks.forEach((t) => {
+    const li = document.createElement("li");
+    li.className = "day-detail-task" + (t.done ? " is-done" : "");
+
+    const icon = document.createElement("span");
+    icon.className = "status-icon " + (t.done ? "done" : "not-done");
+    icon.textContent = t.done ? "\u2713" : "\u2717";
+
+    const label = document.createElement("span");
+    label.className = "task-label";
+    label.textContent = t.text;
+
+    li.append(icon, label);
+    dayDetailTasks.appendChild(li);
+  });
+
+  dayDetailPopup.classList.remove("hidden");
+  dayDetailOverlay.classList.remove("hidden");
+}
+
+/** Close the day detail popup. */
+function closeDayDetail() {
+  dayDetailPopup.classList.add("hidden");
+  dayDetailOverlay.classList.add("hidden");
+}
+
+// Calendar navigation
+calPrev.addEventListener("click", () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar(calYear, calMonth);
+});
+
+calNext.addEventListener("click", () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar(calYear, calMonth);
+});
+
+// Toggle calendar
+calendarToggle.addEventListener("click", () => {
+  const isHidden = calendarPanel.classList.toggle("hidden");
+  calendarToggle.classList.toggle("active", !isHidden);
+  if (!isHidden) {
+    renderCalendar(calYear, calMonth);
+  }
+});
+
+// Close day detail
+dayDetailClose.addEventListener("click", closeDayDetail);
+dayDetailOverlay.addEventListener("click", closeDayDetail);
+
 // ---- Daily review ----
 
 /** Return today's date as YYYY-MM-DD in local time. */
@@ -188,6 +400,11 @@ taskInput.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
+  // Escape — close day detail popup
+  if (e.key === "Escape" && !dayDetailPopup.classList.contains("hidden")) {
+    closeDayDetail();
+    return;
+  }
   // Ctrl+Backspace — delete last incomplete task
   if (e.ctrlKey && e.key === "Backspace") {
     // Only fire when the input is NOT focused (avoid interfering with typing)
@@ -225,4 +442,12 @@ badgeToggle.addEventListener("change", async () => {
 
   // Ensure badge is up-to-date on open
   updateBadge(tasks);
+
+  // Calendar init
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  await loadHistory();
+  await snapshotToday(tasks);
+  updateStreak();
 })();
